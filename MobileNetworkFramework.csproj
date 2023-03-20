@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <Folder Include="NetworkModule" />
+      <Folder Include="SimulationModule\StepModeling" />
     </ItemGroup>
 
 </Project>

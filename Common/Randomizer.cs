@@ -2,7 +2,7 @@
 
 namespace MobileNetworkFramework.Common
 {
-    public class Randomizer
+    public static class Randomizer
     {
         private static readonly Random RandomGenerator = new Random();
 

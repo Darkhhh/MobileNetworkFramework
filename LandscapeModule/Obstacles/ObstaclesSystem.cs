@@ -10,27 +10,46 @@ namespace MobileNetworkFramework.LandscapeModule.Obstacles
             Cylinder, Sharp, Transparent
         }
 
+        #region Properties
+
         public int ObstaclesNumber => _obstacles.Count + _customObstacles.Count;
         public int ComplexObstaclesNumber => _complexObstacles.Count;
-
+        
         public List<IIntersectableObstacle> IntersectableObstacles
         {
             get
             {
-                var result = new List<IIntersectableObstacle>(_obstacles.Count);
                 foreach (var obstacle in _obstacles)
                 {
-                    if (obstacle is IIntersectableObstacle intersectableObstacle) result.Add(intersectableObstacle);
+                    if (obstacle is IIntersectableObstacle intersectableObstacle) 
+                        _intersectableObstacles.Add(intersectableObstacle);
                 }
-                return result;
+                return _intersectableObstacles;
             }
         }
+
+        #endregion
+
+
+        #region Private Values
+
+        private readonly List<IObstacle> _obstacles = new List<IObstacle>();
         
-        private List<IObstacle> _obstacles = new List<IObstacle>();
         private List<ComplexObstacle> _complexObstacles = new List<ComplexObstacle>();
-        private List<CustomObstacle> _customObstacles = new List<CustomObstacle>();
         
+        private readonly List<CustomObstacle> _customObstacles = new List<CustomObstacle>();
+
+        private readonly List<IIntersectableObstacle> _intersectableObstacles = new List<IIntersectableObstacle>();
+
+        #endregion
+
+        
+        #region Initialization
+
         public ObstaclesSystem(){}
+
+        #endregion
+        
 
         #region Creating Obstacles Methods
 
@@ -75,10 +94,26 @@ namespace MobileNetworkFramework.LandscapeModule.Obstacles
             }
         }
 
+        #endregion
+
+
+        #region Add Obstacle
+
         public void AddCustomObstacle(CustomObstacle customObstacle) => _customObstacles.Add(customObstacle);
+
+        public void Add(IObstacle obstacle) => _obstacles.Add(obstacle);
+
+        public void Add(IConnectableObstacle obstacle) => _obstacles.Add(obstacle);
+
+        public void Add(IIntersectableObstacle obstacle)
+        {
+            if(obstacle is IObstacle iObstacle) _obstacles.Add(iObstacle);
+            _intersectableObstacles.Add(obstacle);
+        }
 
         #endregion
 
+        
         #region IObstacle
 
         public bool IsPointBelongTo(Point point)

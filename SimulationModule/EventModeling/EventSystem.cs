@@ -1,4 +1,4 @@
-﻿namespace MobileNetworkFramework.SimulationModule;
+﻿namespace MobileNetworkFramework.SimulationModule.EventModeling;
 
 public class EventSystem
 {

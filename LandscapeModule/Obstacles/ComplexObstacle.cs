@@ -1,4 +1,4 @@
-using MobileNetworkFramework.Common;
+using MobileNetworkFramework.Common.Algorithms;
 using MobileNetworkFramework.Common.Geometry;
 
 namespace MobileNetworkFramework.LandscapeModule.Obstacles
@@ -95,7 +95,7 @@ namespace MobileNetworkFramework.LandscapeModule.Obstacles
             for (var i = 0; i < obstacles.Count; i++)
             {
                 if(used[i]) continue;
-                var setOfConnectedObstacles = Algorithms.DepthFirstSearch(adjacencyList, obstacles[i]);
+                var setOfConnectedObstacles = Graphs.DepthFirstSearch(adjacencyList, obstacles[i]);
                 for (var j = 0; j < obstacles.Count; j++)
                     if (setOfConnectedObstacles.Contains(obstacles[j])) used[j] = true;
                 var complexObstacle = new ComplexObstacle();

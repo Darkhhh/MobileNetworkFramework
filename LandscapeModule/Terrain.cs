@@ -76,6 +76,14 @@ namespace MobileNetworkFramework.LandscapeModule
 
             ObstaclesSystem.SearchForComplexObstacles();
         }
+
+        private Terrain(Quad terrainQuad)
+        {
+            TerrainQuad = terrainQuad;
+            InitData = new TerrainInitializationData();
+        }
+
+        public static Terrain Empty(Quad terrainQuad) => new Terrain(terrainQuad);
     }
 }
 

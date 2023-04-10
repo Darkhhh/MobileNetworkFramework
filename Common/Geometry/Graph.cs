@@ -1,8 +1,6 @@
-using MobileNetworkFramework.LandscapeModule.Obstacles;
-
 namespace MobileNetworkFramework.Common.Geometry
 {
-    public class Graph<T> where T : notnull, IConnectableObstacle
+    public class Graph<T> where T : notnull
     {
         #region Properties
 

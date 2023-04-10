@@ -1,4 +1,4 @@
-﻿namespace MobileNetworkFramework.SimulationModule.EventModeling;
+﻿namespace MobileNetworkFramework.NetworkModule.SimulationModule;
 
 public class EventSystem
 {
@@ -6,38 +6,36 @@ public class EventSystem
 
     public int EventsAmount => _events.Count;
     
-    private readonly List<SimulationEvent> _events;
+    private readonly List<NetworkEvent> _events;
 
     #endregion
 
 
     #region Constructors
 
-    public EventSystem(int capacity) => _events = new List<SimulationEvent>(capacity);
+    public EventSystem(int capacity) => _events = new List<NetworkEvent>(capacity);
+
+    public EventSystem() => _events = new List<NetworkEvent>();
 
     #endregion
 
 
     #region Public Methods
 
-    public void AddEvent(SimulationEvent @event)
+    public void AddEvent(NetworkEvent networkEvent)
     {
+        if (networkEvent.Time < 0) return;
+        
         for (var i = 0; i < _events.Count; i++)
         {
-            if (!(_events[i].Time >= @event.Time)) continue;
-            _events.Insert(i, @event);
+            if (!(_events[i].Time >= networkEvent.Time)) continue;
+            _events.Insert(i, networkEvent);
             return;
         }
-        _events.Add(@event);
+        _events.Add(networkEvent);
     }
 
-    public void AddTwoEvents(SimulationEvent first, SimulationEvent second)
-    {
-        AddEvent(first);
-        AddEvent(second);
-    }
-
-    public SimulationEvent NextEvent()
+    public NetworkEvent NextEvent()
     {
         var result = _events[0];
         _events.RemoveAt(0);
@@ -50,9 +48,7 @@ public class EventSystem
         var s = _events.
             Aggregate("", (current, @event) => 
                 current + (" Time: " + @event.Time + " Type: " + @event.Type.ToString() + "\n"));
-
         s += "\n";
-
         return s;
     }
 

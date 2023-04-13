@@ -1,9 +1,12 @@
+using System.Collections.Concurrent;
 using MobileNetworkFramework.Common.Geometry;
 
 namespace MobileNetworkFramework.Common.Algorithms;
 
 public static class Graphs
 {
+    #region Adjacency
+
     public static void GetAdjacencyMatrix(IConnectable[] items, bool[,] adjacencyMatrix, bool parallel = true)
     {
         if (parallel)
@@ -30,7 +33,36 @@ public static class Graphs
         }
     }
     
-    
+    public static Dictionary<IConnectable, HashSet<IConnectable>> GetAdjacencyList(IConnectable[] items, bool parallel = true)
+    {
+        if (parallel)
+        {
+            var result = new ConcurrentDictionary<IConnectable, HashSet<IConnectable>>();
+            Parallel.ForEach(items, item =>
+            {
+                result.TryAdd(item, new HashSet<IConnectable>());
+                foreach (var t in items) if (item != t && item.Connected(t)) result[item].Add(t);
+            });
+            return result.ToDictionary(p => p.Key, p => p.Value);
+        }
+        else
+        {
+            var result = new Dictionary<IConnectable, HashSet<IConnectable>>();
+            for (var i = 0; i < items.Length; i++)
+            {
+                result.TryAdd(items[i], new HashSet<IConnectable>());
+                for (var j = 0; j < items.Length; j++)
+                    if (i != j && items[i].Connected(items[j])) result[items[i]].Add(items[j]);
+            }
+            return result;
+        }
+    }
+
+    #endregion
+
+
+    #region DFS
+
     public static HashSet<T> DepthFirstSearch<T>(Dictionary<T, HashSet<T>> adjacencyList, T start) where T : notnull
     {
         var visited = new HashSet<T>();
@@ -50,6 +82,9 @@ public static class Graphs
 
         return visited;
     }
+
+    #endregion
+    
     
     #region BFS
     
@@ -85,7 +120,8 @@ public static class Graphs
     /// <param name="preVisit">Allows to pass a function that gets called each time a vertex is visited</param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static HashSet<T> BreadthFirstSearch<T>(Graph<T> graph, T start, Action<T> preVisit = null) {
+    public static HashSet<T> BreadthFirstSearch<T>(Graph<T> graph, T start, Action<T> preVisit) 
+    {
         var visited = new HashSet<T>();
 
         if (!graph.AdjacencyList.ContainsKey(start))
@@ -94,14 +130,13 @@ public static class Graphs
         var queue = new Queue<T>();
         queue.Enqueue(start);
 
-        while (queue.Count > 0) {
+        while (queue.Count > 0) 
+        {
             var vertex = queue.Dequeue();
 
-            if (visited.Contains(vertex))
-                continue;
+            if (visited.Contains(vertex)) continue;
 
-            if (preVisit != null)
-                preVisit(vertex);
+            preVisit?.Invoke(vertex);
 
             visited.Add(vertex);
 
@@ -133,7 +168,7 @@ public static class Graphs
 
         IEnumerable<T> ShortestPath(T v)
         {
-            var path = new List<T> { };
+            var path = new List<T>();
 
             var current = v;
             while (!current.Equals(start))
@@ -152,5 +187,4 @@ public static class Graphs
     }
 
     #endregion
-    
 }

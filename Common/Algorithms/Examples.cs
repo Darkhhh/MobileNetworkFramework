@@ -13,7 +13,7 @@ public static class Examples
             Tuple.Create(5,6), Tuple.Create(8,9), Tuple.Create(9,10)};
 
         var graph = new Graph<int>(vertices, edges);
-        Console.WriteLine(string.Join(", ", Graphs.BreadthFirstSearch(graph, 1)));
+        Console.WriteLine(string.Join(", ", Graph.BreadthFirstSearch(graph, 1)));
         // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     }
 
@@ -28,7 +28,7 @@ public static class Examples
         var graph = new Graph<int>(vertices, edges);
         var path = new List<int>();
 
-        Console.WriteLine(string.Join(", ", Graphs.BreadthFirstSearch(graph, 1, v => path.Add(v))));
+        Console.WriteLine(string.Join(", ", Graph.BreadthFirstSearch(graph, 1, v => path.Add(v))));
         //1, 2, 3, 4, 5, 6, 7, 8, 9, 10
         Console.WriteLine(string.Join(", ", path));
         // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -45,7 +45,7 @@ public static class Examples
         var graph = new Graph<int>(vertices, edges);
 
         var startVertex = 1;
-        var shortestPath = Graphs.ShortestPathFunction(graph, startVertex);
+        var shortestPath = Graph.ShortestPathFunction(graph, startVertex);
         foreach (var vertex in vertices)
             Console.WriteLine("shortest path to {0,2}: {1}", vertex, string.Join(", ", shortestPath(vertex)));
 

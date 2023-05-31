@@ -95,7 +95,7 @@ namespace MobileNetworkFramework.LandscapeModule.Obstacles
             for (var i = 0; i < obstacles.Count; i++)
             {
                 if(used[i]) continue;
-                var setOfConnectedObstacles = Graphs.DepthFirstSearch(adjacencyList, obstacles[i]);
+                var setOfConnectedObstacles = Graph.DepthFirstSearch(adjacencyList, obstacles[i]);
                 for (var j = 0; j < obstacles.Count; j++)
                     if (setOfConnectedObstacles.Contains(obstacles[j])) used[j] = true;
                 var complexObstacle = new ComplexObstacle();

@@ -3,7 +3,7 @@ using MobileNetworkFramework.Common.Geometry;
 
 namespace MobileNetworkFramework.Common.Algorithms;
 
-public static class Graphs
+public static class Graph
 {
     #region Adjacency
 

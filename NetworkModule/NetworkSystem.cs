@@ -1,3 +1,4 @@
+using MobileNetworkFramework.Common.ObjectPooling;
 using MobileNetworkFramework.LandscapeModule;
 using MobileNetworkFramework.NetworkModule.NetworkObject;
 using MobileNetworkFramework.NetworkModule.SimulationModule;
@@ -22,6 +23,7 @@ public class NetworkSystem
     private readonly List<(ITask task, INetworkObject creator)> _tasks = new();
     private readonly List<(ITask task, ISolveTask solver)> _takenTasks = new();
     private readonly EventSystem _eventSystem;
+    private readonly ObjectPool<NetworkEvent> _eventsPool;
 
     private float _creatingTasksFrequency = -1;
     private float _updateFrequency = -1;
@@ -49,6 +51,7 @@ public class NetworkSystem
         _disposeObjects = new List<IDispose>();
         
         _eventSystem = new EventSystem();
+        _eventsPool = new ObjectPool<NetworkEvent>(() => new NetworkEvent(), 128);
         Terrain = terrain;
     }
 
@@ -83,14 +86,12 @@ public class NetworkSystem
         _tasks.Clear();
         foreach (var item in _takenTasks)
         {
-            var e = new NetworkEvent()
-            {
-                Time = item.task.GetTransferTime(),
-                Type = NetworkEventType.DataTransferFinished,
-                NetworkObject = item.solver,
-                Task = item.task
-            };
-            _eventSystem.AddEvent(e);
+            var t = _eventsPool.Get();
+            t.Time = item.task.GetTransferTime();
+            t.Type = NetworkEventType.DataTransferFinished;
+            t.NetworkObject = item.solver;
+            t.Task = item.task;
+            _eventSystem.AddEvent(t);
         }
         _takenTasks.Clear();
     }
@@ -105,13 +106,20 @@ public class NetworkSystem
 
     #region Public Methods
 
-    public void Add(INetworkObject networkObject)
+    public NetworkSystem Add(INetworkObject networkObject)
     {
         if (networkObject is IInit init) _initObjects.Add(init);
         if (networkObject is ICreateTask creator) _createTasksObjects.Add(creator);
         if (networkObject is ITakeTask taker) _takeTasksObjects.Add(taker);
         if (networkObject is IUpdate updater) _updateObjects.Add(updater);
         if (networkObject is IDispose disposer) _disposeObjects.Add(disposer);
+
+        return this;
+    }
+
+    public void Add(params INetworkObject[] networkObjects)
+    {
+        foreach (var o in networkObjects) Add(o);
     }
     
     public void Initialize(float creatingTasksFrequency, float updateFrequency)
@@ -129,38 +137,35 @@ public class NetworkSystem
         {
             var e = _eventSystem.NextEvent();
 
-            if (e.Type == NetworkEventType.CreateTasks)
+            switch (e.Type)
             {
-                CreateTasks();
-                TakeTasks();
-                e.Time = _creatingTasksFrequency;
-                _eventSystem.AddEvent(e);
-            }
-
-            if (e.Type == NetworkEventType.Update)
-            {
-                Update();
-                e.Time = _updateFrequency;
-                _eventSystem.AddEvent(e);
-            }
-
-            if (e.Type == NetworkEventType.DataTransferFinished)
-            {
-                e.Time = ((ISolveTask) e.NetworkObject).AddTask(this, e.Task);
-                e.Type = NetworkEventType.NetworkObjectStartComputing;
-                _eventSystem.AddEvent(e);
-            }
-
-            if (e.Type == NetworkEventType.NetworkObjectStartComputing)
-            {
-                e.Time = ((ISolveTask) e.NetworkObject).SolveTask(this, e.Task);
-                e.Type = NetworkEventType.NetworkObjectFinishComputing;
-                _eventSystem.AddEvent(e);
-            }
-
-            if (e.Type == NetworkEventType.NetworkObjectFinishComputing)
-            {
-                TaskWasFinished?.Invoke(e.NetworkObject, e.Task);
+                case NetworkEventType.CreateTasks:
+                    CreateTasks();
+                    TakeTasks();
+                    e.Time = _creatingTasksFrequency;
+                    _eventSystem.AddEvent(e);
+                    break;
+                case NetworkEventType.Update:
+                    Update();
+                    e.Time = _updateFrequency;
+                    _eventSystem.AddEvent(e);
+                    break;
+                case NetworkEventType.DataTransferFinished:
+                    e.Time = ((ISolveTask) e.NetworkObject).AddTask(this, e.Task);
+                    e.Type = NetworkEventType.NetworkObjectStartComputing;
+                    _eventSystem.AddEvent(e);
+                    break;
+                case NetworkEventType.NetworkObjectStartComputing:
+                    e.Time = ((ISolveTask) e.NetworkObject).SolveTask(this, e.Task);
+                    e.Type = NetworkEventType.NetworkObjectFinishComputing;
+                    _eventSystem.AddEvent(e);
+                    break;
+                case NetworkEventType.NetworkObjectFinishComputing:
+                    TaskWasFinished?.Invoke(e.NetworkObject, e.Task);
+                    _eventsPool.Return(e);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
         
